@@ -1,19 +1,19 @@
 {
   "name": "digitalverse-redesign",
-  "version": "1.0.0",
+  "version": "2.0.0",
   "private": true,
-  "description": "DIGITALVERSE — scrollytelling site with admin panel and CRM",
-  "main": "server.js",
-  "engines": { "node": ">=22" },
+  "description": "DIGITALVERSE — scrollytelling site with admin panel and CRM on Cloudflare Pages + D1",
   "scripts": {
-    "start": "node server.js",
-    "dev": "node --watch server.js"
+    "build": "node build.js",
+    "dev": "npm run build && wrangler pages dev --binding SESSION_SECRET=dev-secret-change-me",
+    "db:init": "wrangler d1 execute digitalverse --remote --file=./migrations/0001_init.sql",
+    "db:init:local": "wrangler d1 execute digitalverse --local --file=./migrations/0001_init.sql",
+    "deploy": "npm run build && wrangler pages deploy dist"
   },
-  "dependencies": {
-    "bcryptjs": "^3.0.3",
-    "better-sqlite3": "^13.0.3",
-    "express": "^5.2.1",
-    "express-session": "^1.19.0",
-    "multer": "^2.2.0"
+  "devDependencies": {
+    "wrangler": "^4.0.0"
+  },
+  "allowScripts": {
+    "workerd@1.20260907.1": true
   }
 }

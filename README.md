@@ -12,19 +12,41 @@ Ikki rejim bor.
 aynan shunday ishlaydi:
 
 ```bash
-cd digitalverse-redesign
 python3 -m http.server 8080     # → http://localhost:8080
 ```
 
-**2. Sayt + admin panel + CRM.** Node kerak:
+**2. Sayt + admin panel + CRM** (Cloudflare Pages + D1):
 
 ```bash
 npm install
-npm start                       # → http://localhost:3000
-                                #   admin: http://localhost:3000/admin/
+npm run db:init:local           # lokal bazaga sxemani yozadi
+npm run dev                     # → http://localhost:8788
+                                #   admin: http://localhost:8788/admin/
 ```
 
 Birinchi kirishda admin akkaunti so'raladi (parol kamida 8 belgi).
+
+## Cloudflare'ga deploy (bepul)
+
+Hammasi bepul tarifga sig'adi: D1 5 GB, kuniga 100 000 so'rov, Pages cheksiz
+statik trafik. Karta talab qilinmaydi.
+
+1. **Pages loyihasini ulang.** Cloudflare dashboard → Workers & Pages →
+   Create → Pages → Connect to Git → shu repozitoriyni tanlang.
+   - Build command: `npm run build`
+   - Build output directory: `dist`
+2. **Bazani yarating.** Storage & Databases → D1 → Create → nomi `digitalverse`.
+   Console'ga o'tib `migrations/0001_init.sql` ichidagi SQL'ni bir marta bajaring.
+3. **Bindinglarni qo'shing.** Pages loyihasi → Settings → Bindings:
+   - D1 database: `DB` → `digitalverse`
+   - Secret: `SESSION_SECRET` → uzun tasodifiy satr
+     (`openssl rand -hex 32` bilan hosil qiling)
+4. Qayta deploy qiling. `https://<loyiha>.pages.dev/admin/` ochilib, birinchi
+   kirishda admin akkaunti yaratiladi.
+
+CLI orqali ham bo'ladi: `npx wrangler login`, so'ng
+`npx wrangler d1 create digitalverse` (chiqqan `database_id` ni `wrangler.toml`
+ga yozing), `npm run db:init`, `npm run deploy`.
 
 ## Admin panel
 
@@ -35,7 +57,7 @@ Birinchi kirishda admin akkaunti so'raladi (parol kamida 8 belgi).
 - **Portfolio** — ishlar qo'shish, rasm yuklash, tartibni o'zgartirish,
   yashirish. Saytdagi «Наши работы» bloki shu yerdan to'ladi.
 - **CRM** — saytdagi formadan kelgan arizalar. Holat (yangi → ish jarayonida →
-  muvaffaqiyatli / yo'qotilgan), izoh, CSV eksport. Telefon raqami bosiladigan.
+  muvaffaqiyatli / yo'qotilgan), izoh, CSV eksport. Telefon bosiladigan.
 
 `/admin/#crm` kabi havolalar to'g'ridan-to'g'ri kerakli bo'limni ochadi.
 
@@ -43,15 +65,21 @@ Birinchi kirishda admin akkaunti so'raladi (parol kamida 8 belgi).
 
 Asl matn **`index.html` ichida qoladi** — bazada faqat o'zgartirishlar
 saqlanadi. Har bir tahrirlanadigan element `data-cms="kalit"` atributiga ega;
-server ishga tushganda aynan shu HTML'dan asl qiymatlarni o'qiydi
-(`readDefaults()`), admin formasi esa `server.js` dagi `CONTENT_META`
-ro'yxatidan yorliqlarni oladi.
+server asl qiymatlarni chop etilgan `index.html` dan o'qiydi
+(`lib/content.js` → `readDefaults`), yorliqlarni esa `CONTENT_META` dan oladi.
 
-Buning ikkita amaliy natijasi bor:
-1. Baza bo'sh bo'lsa yoki server umuman bo'lmasa (GitHub Pages) — sayt
+Natijada:
+1. Baza bo'sh bo'lsa yoki backend umuman bo'lmasa (GitHub Pages) — sayt
    dizaynerdagi asl matn bilan chiqadi, hech narsa buzilmaydi.
 2. Yangi maydon qo'shish uchun HTML'ga atribut va `CONTENT_META` ga bitta
    qator qo'shiladi, xolos.
+
+### Rasmlar nega bazada saqlanadi
+
+R2 bepul bo'lsa ham karta biriktirishni so'raydi. Shuning uchun portfolio
+rasmlari D1 ichida blob sifatida yotadi, admin panel esa yuklashdan oldin
+brauzerda rasmni 1400px gacha kichraytiradi (~850 KB chegara). Rasm
+`/api/img/:id` orqali bir yillik kesh bilan beriladi.
 
 ## API
 
@@ -59,50 +87,16 @@ Buning ikkita amaliy natijasi bor:
 |---|---|---|
 | GET | `/api/content` | ochiq — faqat o'zgartirishlar |
 | GET | `/api/portfolio` | ochiq — chop etilgan ishlar |
+| GET | `/api/img/:id` | ochiq — portfolio rasmi |
 | POST | `/api/leads` | ochiq — formadan ariza |
 | GET/PUT | `/api/admin/content` | admin |
 | CRUD | `/api/admin/portfolio` | admin |
 | GET/PATCH/DELETE | `/api/admin/leads` | admin |
 | GET | `/api/admin/leads.csv` | admin — Excel uchun BOM bilan |
 
-## Hosting
-
-Baza va yuklangan rasmlar `STORAGE_DIR` ichida saqlanadi (`data/`, `uploads/`).
-Railway kabi platformada bu o'zgaruvchini doimiy volume'ga yo'naltiring, aks
-holda har deploy'da ma'lumot yo'qoladi. Ishlab chiqarishda `NODE_ENV=production`
-qo'ying — shunda cookie `secure` bo'ladi va proxy ishonchli deb belgilanadi.
-
-## Fayl tuzilishi
-
-```
-index.html            — butun sahifa
-server.js             — Express server, API, admin va CRM
-admin/                — boshqaruv paneli (index.html, admin.css, admin.js)
-assets/css/style.css  — dizayn tizimi va barcha bo'limlar
-assets/js/main.js     — scroll dvigateli (kutubxonasiz, vanilla JS)
-assets/js/cms.js      — admin matnlarini qo'llaydi, formani CRM'ga yuboradi
-assets/logos/         — mijozlar logotiplari (asl saytdan)
-assets/img/           — logo belgisi
-data/, uploads/       — baza va yuklangan rasmlar (git'ga tushmaydi)
-```
-
-## Ranglar (asl saytdan saqlangan)
-
-| Token | Qiymat | Qayerda |
-|---|---|---|
-| `--red` | `#EC3237` | asosiy brend rangi |
-| `--red-hi` | `#EE5155` | hover |
-| `--black` / `--ink` | `#000000` / `#08080A` | fon |
-| `--white` | `#FFFFFF` | matn |
-| `--grey` / `--grey-2` | `#666666` / `#9A9AA3` | ikkinchi darajali matn |
-| `--green` | `#16A34A` | natija/foyda raqamlari |
-| `--blush` | `#FEF1F1` | FAQ bo'limi foni |
-| `--smoke` | `#FBFCFC` | "Nam doveryayut" bo'limi foni |
-
-Shriftlar uch rolda: sarlavhalar — **Unbounded** (asl Benzin o'rniga, u bepul
-emas; hero'da yengil 300 og'irlikda, bo'limlarda qalin), matn — **Manrope**,
-yorliqlar/indekslar/raqamli ko'rsatkichlar — **JetBrains Mono**. Mono bu yerda
-bezak emas: u "ma'lumot" registrini bildiradi.
+Sessiya server tomonida saqlanmaydi: cookie HMAC bilan imzolanadi
+(`lib/auth.js`), parollar esa PBKDF2-SHA256 (100k iteratsiya) bilan xeshlanadi —
+Workers muhitida bcrypt yo'q.
 
 ## Scrollytelling ssenariysi
 

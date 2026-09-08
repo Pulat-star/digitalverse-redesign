@@ -205,6 +205,32 @@
       .catch(function (err) { msg($('#wMsg'), err.message, 'err'); });
   }
 
+  /* Images are stored in D1, which is not the place for a 5 MB photo. Resize
+     in the browser so the upload is small and predictable. */
+  var MAX_EDGE = 1400, TARGET_BYTES = 850 * 1024;
+  function shrink(file) {
+    if (!file) return Promise.resolve(null);
+    if (file.size <= TARGET_BYTES && file.type !== 'image/png') return Promise.resolve(file);
+    if (!window.createImageBitmap) return Promise.resolve(file);
+    return createImageBitmap(file).then(function (bmp) {
+      var scale = Math.min(1, MAX_EDGE / Math.max(bmp.width, bmp.height));
+      var w = Math.round(bmp.width * scale), h = Math.round(bmp.height * scale);
+      var c = document.createElement('canvas');
+      c.width = w; c.height = h;
+      var g = c.getContext('2d');
+      g.fillStyle = '#0b0b0f'; g.fillRect(0, 0, w, h);   // flatten transparency for JPEG
+      g.drawImage(bmp, 0, 0, w, h);
+      bmp.close && bmp.close();
+      return new Promise(function (resolve) {
+        c.toBlob(function (blob) {
+          resolve(blob && blob.size < file.size
+            ? new File([blob], 'work.jpg', { type: 'image/jpeg' })
+            : file);
+        }, 'image/jpeg', 0.82);
+      });
+    }).catch(function () { return file; });
+  }
+
   var modal = $('#wModal');
   function openWork(id) {
     var w = id ? works.find(function (x) { return x.id === id; }) : null;
@@ -231,19 +257,22 @@
   $('#wForm').addEventListener('submit', function (e) {
     e.preventDefault();
     var id = $('#wId').value;
-    var fd = new FormData();
-    fd.append('title', $('#wTitle').value);
-    fd.append('client', $('#wClient').value);
-    fd.append('category', $('#wCat').value);
-    fd.append('result', $('#wRes').value);
-    fd.append('link', $('#wLink').value);
-    fd.append('description', $('#wDesc').value);
-    fd.append('published', $('#wPub').value);
-    if ($('#wImg').files[0]) fd.append('image', $('#wImg').files[0]);
-
     $('#wSave').disabled = true;
-    api('/api/admin/portfolio' + (id ? '/' + id : ''), { method: id ? 'PUT' : 'POST', body: fd })
-      .then(function () { closeWork(); msg($('#wMsg'), 'Saqlandi.', 'ok'); loadWorks(); })
+    msg($('#wErr'), '');
+
+    shrink($('#wImg').files[0]).then(function (img) {
+      var fd = new FormData();
+      fd.append('title', $('#wTitle').value);
+      fd.append('client', $('#wClient').value);
+      fd.append('category', $('#wCat').value);
+      fd.append('result', $('#wRes').value);
+      fd.append('link', $('#wLink').value);
+      fd.append('description', $('#wDesc').value);
+      fd.append('published', $('#wPub').value);
+      if (img) fd.append('image', img);
+      return api('/api/admin/portfolio' + (id ? '/' + id : ''),
+                 { method: id ? 'PUT' : 'POST', body: fd });
+    }).then(function () { closeWork(); msg($('#wMsg'), 'Saqlandi.', 'ok'); loadWorks(); })
       .catch(function (err) { msg($('#wErr'), err.message, 'err'); })
       .then(function () { $('#wSave').disabled = false; });
   });

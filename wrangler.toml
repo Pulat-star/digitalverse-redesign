@@ -1,0 +1,9 @@
+name = "digitalverse"
+compatibility_date = "2026-01-01"
+pages_build_output_dir = "dist"
+
+# `wrangler d1 create digitalverse` prints the id — paste it below and commit.
+[[d1_databases]]
+binding = "DB"
+database_name = "digitalverse"
+database_id = "REPLACE_WITH_D1_ID"
