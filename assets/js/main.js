@@ -710,16 +710,7 @@ var mqDesktop = window.matchMedia('(min-width: 1024px)');
     });
   })();
 
-  /* ----------------------------------------------------------------- form */
-  (function () {
-    var form = $('.form');
-    if (!form) return;
-    form.addEventListener('submit', function (e) {
-      e.preventDefault();
-      // Статическая демо-версия: подключите свой endpoint / CRM здесь.
-      form.classList.add('is-sent');
-    });
-  })();
+  /* the contact form is owned by cms.js, which posts it to the CRM */
 
   /* smooth anchors that respect the fixed header */
   $$('a[href^="#"]').forEach(function (a) {

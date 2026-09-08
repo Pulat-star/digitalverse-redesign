@@ -6,24 +6,84 @@ hikoya bosqichma-bosqich ochiladi.
 
 ## Ishga tushirish
 
-Statik sayt, hech qanday build kerak emas:
+Ikki rejim bor.
+
+**1. Faqat sayt (statik).** Hech narsa o'rnatish shart emas — GitHub Pages
+aynan shunday ishlaydi:
 
 ```bash
 cd digitalverse-redesign
-python3 -m http.server 8080
-# → http://localhost:8080
+python3 -m http.server 8080     # → http://localhost:8080
 ```
 
-`index.html` faylni to'g'ridan-to'g'ri brauzerda ochsa ham ishlaydi.
+**2. Sayt + admin panel + CRM.** Node kerak:
+
+```bash
+npm install
+npm start                       # → http://localhost:3000
+                                #   admin: http://localhost:3000/admin/
+```
+
+Birinchi kirishda admin akkaunti so'raladi (parol kamida 8 belgi).
+
+## Admin panel
+
+`/admin/` manzilida, uch bo'lim:
+
+- **Matnlar** — saytdagi 62 ta matn maydoni. O'zgartirilganlari qizil nuqta
+  bilan belgilanadi, «asliga» tugmasi bitta maydonni qaytaradi.
+- **Portfolio** — ishlar qo'shish, rasm yuklash, tartibni o'zgartirish,
+  yashirish. Saytdagi «Наши работы» bloki shu yerdan to'ladi.
+- **CRM** — saytdagi formadan kelgan arizalar. Holat (yangi → ish jarayonida →
+  muvaffaqiyatli / yo'qotilgan), izoh, CSV eksport. Telefon raqami bosiladigan.
+
+`/admin/#crm` kabi havolalar to'g'ridan-to'g'ri kerakli bo'limni ochadi.
+
+### Matn tahrirlash qanday ishlaydi
+
+Asl matn **`index.html` ichida qoladi** — bazada faqat o'zgartirishlar
+saqlanadi. Har bir tahrirlanadigan element `data-cms="kalit"` atributiga ega;
+server ishga tushganda aynan shu HTML'dan asl qiymatlarni o'qiydi
+(`readDefaults()`), admin formasi esa `server.js` dagi `CONTENT_META`
+ro'yxatidan yorliqlarni oladi.
+
+Buning ikkita amaliy natijasi bor:
+1. Baza bo'sh bo'lsa yoki server umuman bo'lmasa (GitHub Pages) — sayt
+   dizaynerdagi asl matn bilan chiqadi, hech narsa buzilmaydi.
+2. Yangi maydon qo'shish uchun HTML'ga atribut va `CONTENT_META` ga bitta
+   qator qo'shiladi, xolos.
+
+## API
+
+| Usul | Yo'l | Kim uchun |
+|---|---|---|
+| GET | `/api/content` | ochiq — faqat o'zgartirishlar |
+| GET | `/api/portfolio` | ochiq — chop etilgan ishlar |
+| POST | `/api/leads` | ochiq — formadan ariza |
+| GET/PUT | `/api/admin/content` | admin |
+| CRUD | `/api/admin/portfolio` | admin |
+| GET/PATCH/DELETE | `/api/admin/leads` | admin |
+| GET | `/api/admin/leads.csv` | admin — Excel uchun BOM bilan |
+
+## Hosting
+
+Baza va yuklangan rasmlar `STORAGE_DIR` ichida saqlanadi (`data/`, `uploads/`).
+Railway kabi platformada bu o'zgaruvchini doimiy volume'ga yo'naltiring, aks
+holda har deploy'da ma'lumot yo'qoladi. Ishlab chiqarishda `NODE_ENV=production`
+qo'ying — shunda cookie `secure` bo'ladi va proxy ishonchli deb belgilanadi.
 
 ## Fayl tuzilishi
 
 ```
 index.html            — butun sahifa
+server.js             — Express server, API, admin va CRM
+admin/                — boshqaruv paneli (index.html, admin.css, admin.js)
 assets/css/style.css  — dizayn tizimi va barcha bo'limlar
 assets/js/main.js     — scroll dvigateli (kutubxonasiz, vanilla JS)
+assets/js/cms.js      — admin matnlarini qo'llaydi, formani CRM'ga yuboradi
 assets/logos/         — mijozlar logotiplari (asl saytdan)
 assets/img/           — logo belgisi
+data/, uploads/       — baza va yuklangan rasmlar (git'ga tushmaydi)
 ```
 
 ## Ranglar (asl saytdan saqlangan)
@@ -87,9 +147,8 @@ O'ngdagi nuqtalar — bob indikatori; tepadagi chiziq — scroll progressi.
 
 ## Hali ulanmagan narsalar
 
-- **Forma** hozircha faqat "yuborildi" holatini ko'rsatadi.
-  Backend/CRM endpoint `assets/js/main.js` ichidagi `form.addEventListener('submit')`
-  blokiga qo'shiladi.
+- **Forma** server bilan ishlaganda arizani CRM'ga yozadi; serversiz (GitHub Pages)
+  faqat "yuborildi" holatini ko'rsatadi.
 - **Ijtimoiy tarmoq havolalari** footerda `#` — haqiqiy URL'lar bilan almashtirish kerak.
 - **"Подробнее" / "Смотреть портфолио"** tugmalari hozir arizaga olib boradi;
   alohida sahifalar bo'lsa, ular havolaga ulanadi.
