@@ -173,7 +173,7 @@ var mqDesktop = window.matchMedia('(min-width: 1024px)');
       /* -- interior fill, so each disc reads as a lit orb, not a ring ----- */
       var fill = [];
       var guard = 0;
-      while (fill.length < Math.round(budget * 0.6) && guard < 60000) {
+      while (fill.length < Math.round(budget * 0.45) && guard < 60000) {
         guard++;
         var fx = (Math.random() - 0.5) * 108, fy = (Math.random() - 0.5) * 92;
         if (inside(fx, fy, 0.7)) fill.push([fx, fy]);
@@ -188,11 +188,9 @@ var mqDesktop = window.matchMedia('(min-width: 1024px)');
       // extrude the flat silhouette into a lens: each z slice is the outline
       // scaled toward the centre, so the front view still reads as the logo
       var slices = [
-        { L: 0,     keep: 1.0,  s: [0.26, 0.5],  b: [0.72, 1.0] },
-        { L: -0.5,  keep: 0.45, s: [0.22, 0.42], b: [0.5, 0.78] },
-        { L: 0.5,   keep: 0.45, s: [0.22, 0.42], b: [0.5, 0.78] },
-        { L: -0.88, keep: 0.22, s: [0.18, 0.34], b: [0.34, 0.55] },
-        { L: 0.88,  keep: 0.22, s: [0.18, 0.34], b: [0.34, 0.55] }
+        { L: 0,     keep: 1.0,  s: [0.27, 0.52], b: [0.74, 1.0] },
+        { L: -0.6,  keep: 0.5,  s: [0.22, 0.44], b: [0.52, 0.82] },
+        { L: 0.6,   keep: 0.5,  s: [0.22, 0.44], b: [0.52, 0.82] }
       ];
       slices.forEach(function (sl) {
         var f = Math.sqrt(1 - 0.82 * sl.L * sl.L);
@@ -214,7 +212,7 @@ var mqDesktop = window.matchMedia('(min-width: 1024px)');
       });
 
       // a thin halo so the object sits in space rather than on it
-      for (var h = 0; h < 90; h++) {
+      for (var h = 0; h < 70; h++) {
         var a2 = Math.random() * 6.2832, b2 = Math.acos(2 * Math.random() - 1);
         var R2 = 42 + Math.pow(Math.random(), 0.9) * 30;
         mote(Math.sin(b2) * Math.cos(a2) * R2 * 1.1,
@@ -254,7 +252,7 @@ var mqDesktop = window.matchMedia('(min-width: 1024px)');
         p.delay = (i % 40) * 0.011 + Math.random() * 0.14;
       });
 
-      for (var k = 0; k < 11; k++) {
+      for (var k = 0; k < 7; k++) {
         signals.push({ e: (Math.random() * edges.length) | 0, t: Math.random(),
                        dir: Math.random() < 0.5 ? 1 : -1, v: 0.007 + Math.random() * 0.009 });
       }
@@ -296,13 +294,13 @@ var mqDesktop = window.matchMedia('(min-width: 1024px)');
     /* ------------------------------------------------------------ sizing */
     var W = 0, H = 0, dpr = 1, unit = 1, count = 0;
     function resize() {
-      dpr = Math.min(window.devicePixelRatio || 1, 2);
+      dpr = Math.min(window.devicePixelRatio || 1, 1.5);
       W = cv.offsetWidth; H = cv.offsetHeight;
       if (!W || !H) return;
       cv.width = Math.round(W * dpr); cv.height = Math.round(H * dpr);
       ctx.setTransform(dpr, 0, 0, dpr, 0, 0);
       unit = Math.min(W / 132, H / 116);
-      var want = clamp(Math.round(W * H / 700), 360, 900);
+      var want = clamp(Math.round(W * H / 820), 320, 720);
       if (Math.abs(want - count) > 120) { count = want; build(count); }
     }
 
@@ -324,9 +322,27 @@ var mqDesktop = window.matchMedia('(min-width: 1024px)');
     }
 
     var np = [];
+
+    /* Hardware varies far more than the canvas size does. Watch the real frame
+       time for a moment and thin the field if this machine cannot keep up —
+       motes are generated outline first, then fill, then halo, so trimming from
+       the end costs depth, never the silhouette. */
+    var quality = 1, probeFrames = 0, probeStart = 0, probeDone = false;
+    function tuneQuality(now) {
+      if (probeDone || reduced) return;
+      if (!probeStart) { probeStart = now; return; }
+      probeFrames++;
+      if (probeFrames < 45) return;
+      var avg = (now - probeStart) / probeFrames;
+      if (avg > 30) quality = 0.45;            // under ~33 fps
+      else if (avg > 21) quality = 0.68;       // under ~48 fps
+      probeDone = true;
+    }
+
     function frame(now) {
       if (!running) return;
       if (!t0) t0 = now;
+      tuneQuality(now);
       if (!reduced) {
         intro = clamp((now - t0) / 2100, 0, 1);
         spin = Math.sin((now - t0) * 0.00024) * 0.42 + scrollP * 1.5;
@@ -360,7 +376,8 @@ var mqDesktop = window.matchMedia('(min-width: 1024px)');
       }
 
       /* --- motes ------------------------------------------------------- */
-      for (var i = 0; i < P.length; i++) {
+      var shown = quality < 1 ? Math.round(P.length * quality) : P.length;
+      for (var i = 0; i < shown; i++) {
         var p = P[i];
         var X = p.x, Y = p.y, Z = p.z, fade = 1;
         if (intro < 1) {
@@ -394,7 +411,7 @@ var mqDesktop = window.matchMedia('(min-width: 1024px)');
         var bright = clamp(p.b * (0.6 + depth * 0.7) * twk + p.ex * 0.9, 0, 1);
         if (bright < 0.02) continue;
 
-        var rad = p.s * u * sc * (2.5 + p.ex * 1.5);
+        var rad = p.s * u * sc * (2.45 + p.ex * 1.4);
         if (rad < 0.4) continue;
         var bi = clamp(Math.round((depth * 0.92 + p.ex * 0.4) * (BUCKETS - 1)), 0, BUCKETS - 1);
         ctx.globalAlpha = bright * fade;
