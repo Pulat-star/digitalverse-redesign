@@ -48,6 +48,51 @@ CLI orqali ham bo'ladi: `npx wrangler login`, so'ng
 `npx wrangler d1 create digitalverse` (chiqqan `database_id` ni `wrangler.toml`
 ga yozing), `npm run db:init`, `npm run deploy`.
 
+## Domenni ulash — digitalverse.kz
+
+**Avval DNS tuzatilishi kerak.** 2026-10-06 holatiga ko'ra domen umuman
+ishlamayapti: `.kz` registri uni ahost nameserverlariga yo'naltirgan
+(`dns1/dns2.ahost.uz`, `ns1/ns2.ahost.cloud`), lekin ularning to'rttasi ham
+`REFUSED` qaytaradi — ya'ni **zona yaratilmagan**. Shuning uchun har qanday
+resolver `SERVFAIL` oladi va domen hech qayerga ulanmaydi.
+
+Tekshirish:
+
+```bash
+dig +short NS digitalverse.kz          # bo'sh -> delegatsiya ishlamayapti
+dig @dns1.ahost.uz digitalverse.kz SOA # REFUSED -> zona yo'q
+```
+
+### Tavsiya etilgan yo'l: nameserverlarni Cloudflare'ga berish
+
+Bu bir vaqtning o'zida ikki muammoni yechadi — buzuq zonani ham, apex domen
+masalasini ham (`digitalverse.kz` kabi apex'ga oddiy CNAME qo'yib bo'lmaydi,
+Cloudflare esa CNAME flattening qiladi). SSL ham avtomatik va bepul.
+
+1. **Cloudflare** → Add a site → `digitalverse.kz` → Free reja.
+   Cloudflare ikkita nameserver beradi (masalan `xxx.ns.cloudflare.com`).
+2. **ahost paneli** → domen → **Neymserverlar** tabi → mavjud to'rtta
+   nameserverni o'chirib, Cloudflare bergan ikkitasini yozing.
+3. `.kz` delegatsiyasi yangilanishini kuting (odatda 1–6 soat).
+   Tekshirish: `dig +short NS digitalverse.kz`
+4. **Pages loyihasi** tayyor bo'lgach (yuqoridagi «Cloudflare'ga deploy»
+   bo'limi) → Custom domains → `digitalverse.kz` va `www.digitalverse.kz`
+   qo'shing. Cloudflare DNS yozuvlarini o'zi yaratadi.
+
+### Agar nameserverni ko'chirmoqchi bo'lmasangiz
+
+DNS ahost'da qolsin desangiz, **DNS xosting** tabida zonani yaratib, Cloudflare
+Pages bergan `<loyiha>.pages.dev` manziliga yozuv qo'shish kerak. Lekin apex
+(`digitalverse.kz`) uchun ahost ALIAS/ANAME qo'llab-quvvatlashi shart — aks
+holda faqat `www` ishlaydi. Shuning uchun nameserverni ko'chirish osonroq.
+
+### Eslatma: GitHub Pages bilan domen
+
+GitHub Pages ham apex domenni ko'taradi (A yozuvlari `185.199.108.153`,
+`.109.153`, `.110.153`, `.111.153` + repo ildizida `CNAME` fayli), lekin u
+statik — **admin panel va CRM ishlamaydi**. Shuning uchun domen Cloudflare'ga
+ulanadi, GitHub Pages esa namoyish havolasi bo'lib qoladi.
+
 ## Admin panel
 
 `/admin/` manzilida, uch bo'lim:
