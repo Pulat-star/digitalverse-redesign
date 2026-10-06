@@ -744,6 +744,18 @@ var mqDesktop = window.matchMedia('(min-width: 1024px)');
     });
   });
 
+  /* Qo'riqchiga "men ishga tushdim" deb bildiramiz — aks holda u 3 soniyada
+     animatsiyalarni o'chirib, sahifani statik holda ochib yuboradi. */
+  if (window.__dvReady) window.__dvReady();
+
+  /* Animatsiya o'z vaqtida tugamasa ham hero oxirgi holatiga keltiriladi:
+     yashirinib qolgan sarlavha hech qachon ekranda qolmasin. */
+  setTimeout(function () {
+    $$('.hero__in').forEach(function (el) { el.style.transform = 'none'; });
+    var rule = $('.hero__rule');
+    if (rule) rule.style.transform = 'scaleX(1)';
+  }, 2600);
+
   measure();
   onScroll();
   window.addEventListener('load', function () { measure(); onScroll(); });

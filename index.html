@@ -14,6 +14,20 @@
 <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
 <link href="https://fonts.googleapis.com/css2?family=JetBrains+Mono:wght@400;500;600&family=Manrope:wght@400;500;700;800&family=Unbounded:wght@200;300;400;600;700;800;900&display=swap" rel="stylesheet" />
 <link rel="stylesheet" href="assets/css/style.css" />
+<script>
+/* Animatsiyalar kontentni yashiradi, shuning uchun ularni faqat skript haqiqatan
+   ishga tushsa yoqamiz. Agar main.js yuklanmasa, xato bersa yoki animatsiya
+   qo'llanmasa — qo'riqchi 3 soniyada "js" klassini olib tashlaydi va sahifa
+   statik holda to'liq ko'rinadi. Bo'sh qora ekran bo'lishi mumkin emas. */
+(function (d) {
+  var root = d.documentElement;
+  root.className += ' js';
+  var guard = setTimeout(function () {
+    root.className = root.className.replace(/\bjs\b/, '') + ' js-fallback';
+  }, 3000);
+  window.__dvReady = function () { clearTimeout(guard); };
+})(document);
+</script>
 </head>
 <body>
 
