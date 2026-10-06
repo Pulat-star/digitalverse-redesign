@@ -242,10 +242,12 @@ var mqDesktop = window.matchMedia('(min-width: 1024px)');
       nodePos.forEach(function () { adj.push([]); });
       edges.forEach(function (e, i) { adj[e.a].push(i); adj[e.b].push(i); });
 
-      // flight-in start, kept well inside the focal plane
+      // Uchib kelish ekranning o'zidan o'lchanadi: zarrachalar har qanday
+      // o'lchamda ko'rinadigan chekkadan sal tashqaridan yig'iladi.
+      var edge = visibleEdge();
       P.forEach(function (p, i) {
         var a3 = Math.random() * 6.2832, b3 = Math.acos(2 * Math.random() - 1);
-        var R3 = 110 + Math.random() * 70;
+        var R3 = edge * (1.15 + Math.random() * 0.75);
         p.sx = Math.sin(b3) * Math.cos(a3) * R3;
         p.sy = Math.sin(b3) * Math.sin(a3) * R3;
         p.sz = Math.cos(b3) * R3;
@@ -292,7 +294,14 @@ var mqDesktop = window.matchMedia('(min-width: 1024px)');
     function rgbv(c) { return (c[0] | 0) + ',' + (c[1] | 0) + ',' + (c[2] | 0); }
 
     /* ------------------------------------------------------------ sizing */
-    var W = 0, H = 0, dpr = 1, unit = 1, count = 0;
+    var W = 0, H = 0, dpr = 1, unit = 1, count = 0, introMs = 2100;
+
+    /* Sahna ekrandan keng bo'lishi mumkin (telefonda shunday), shuning uchun
+       chekkani canvas emas, haqiqatan ko'rinadigan maydon belgilaydi. */
+    function visibleEdge() {
+      var vis = Math.min(W, window.innerWidth || W);
+      return unit > 0 ? (vis / 2) / unit : 60;
+    }
     function resize() {
       dpr = Math.min(window.devicePixelRatio || 1, 1.5);
       W = cv.offsetWidth; H = cv.offsetHeight;
@@ -300,7 +309,8 @@ var mqDesktop = window.matchMedia('(min-width: 1024px)');
       cv.width = Math.round(W * dpr); cv.height = Math.round(H * dpr);
       ctx.setTransform(dpr, 0, 0, dpr, 0, 0);
       unit = Math.min(W / 132, H / 116);
-      var want = clamp(Math.round(W * H / 820), 320, 720);
+      introMs = (window.innerWidth || W) < 620 ? 1650 : 2100;
+      var want = clamp(Math.round(W * H / 820), 470, 720);
       if (Math.abs(want - count) > 120) { count = want; build(count); }
     }
 
@@ -344,7 +354,7 @@ var mqDesktop = window.matchMedia('(min-width: 1024px)');
       if (!t0) t0 = now;
       tuneQuality(now);
       if (!reduced) {
-        intro = clamp((now - t0) / 2100, 0, 1);
+        intro = clamp((now - t0) / introMs, 0, 1);
         spin = Math.sin((now - t0) * 0.00024) * 0.42 + scrollP * 1.5;
       }
       tiltY = lerp(tiltY, wantY, 0.05);
@@ -354,6 +364,7 @@ var mqDesktop = window.matchMedia('(min-width: 1024px)');
       var cy_ = Math.cos(ay), sy_ = Math.sin(ay), cx_ = Math.cos(ax), sx_ = Math.sin(ax);
       var ox = W / 2, oy = H / 2 - scrollP * H * 0.12;
       var u = unit * (1 + scrollP * 0.1);
+      var smallBoost = unit < 6 ? (6 - unit) * 0.12 : 0;
       var tsec = now * 0.001;
 
       ctx.clearRect(0, 0, W, H);
@@ -411,7 +422,7 @@ var mqDesktop = window.matchMedia('(min-width: 1024px)');
         var bright = clamp(p.b * (0.6 + depth * 0.7) * twk + p.ex * 0.9, 0, 1);
         if (bright < 0.02) continue;
 
-        var rad = p.s * u * sc * (2.45 + p.ex * 1.4);
+        var rad = p.s * u * sc * (2.45 + smallBoost + p.ex * 1.4);
         if (rad < 0.4) continue;
         var bi = clamp(Math.round((depth * 0.92 + p.ex * 0.4) * (BUCKETS - 1)), 0, BUCKETS - 1);
         ctx.globalAlpha = bright * fade;

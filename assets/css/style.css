@@ -1076,7 +1076,7 @@ a.work:hover{ border-color:rgba(236,50,55,.45); transform:translateY(-4px); }
   .burger{ display:block; }
 
   .hero{ padding-top:clamp(92px,13vh,124px); }
-  .hero__stage{ top:50%; width:min(122vw,900px); opacity:.82; }
+  .hero__stage{ top:50%; width:min(104vw,760px); opacity:.82; }
   .hero__scrim{ height:46%;
     background:linear-gradient(180deg, transparent, rgba(8,8,10,.6) 44%, rgba(8,8,10,.9)); }
   .hero__foot{ flex-direction:column; align-items:stretch; gap:26px; }
@@ -1138,9 +1138,12 @@ a.work:hover{ border-color:rgba(236,50,55,.45); transform:translateY(-4px); }
   .eco__head{ padding:clamp(52px,11vw,84px) 0 clamp(22px,5vw,34px); }
   .trust{ padding-block:clamp(48px,10vw,80px); }
   .foot{ padding-block:clamp(44px,9vw,70px) 26px; }
-  .hero__stage{ top:47%; width:min(160vw,720px); opacity:.78; }
-  .hero__scrim{ height:54%;
-    background:linear-gradient(180deg, transparent, rgba(8,8,10,.74) 40%, rgba(8,8,10,.95)); }
+  /* sahna ekranga sig'adi — avval 160vw edi va miya ikki chetdan qirqilardi */
+  .hero__stage{ top:42%; width:min(104vw,540px); opacity:.82; }
+  /* skrim matn boshlanadigan joydan qoraytiradi, miyaning ustiga tushmaydi */
+  .hero__scrim{ height:56%;
+    background:linear-gradient(180deg, transparent, rgba(8,8,10,.48) 40%,
+                rgba(8,8,10,.9) 72%, rgba(8,8,10,.96)); }
   .hero__in--split{ white-space:normal; flex-wrap:wrap; }
   .hero__rule{ display:none; }
   .stat{ flex:1 1 calc(50% - 8px); min-width:0; }
