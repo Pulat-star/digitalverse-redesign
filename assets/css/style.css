@@ -1170,12 +1170,16 @@ a.work:hover{ border-color:rgba(236,50,55,.45); transform:translateY(-4px); }
   .eco__head{ padding:clamp(52px,11vw,84px) 0 clamp(22px,5vw,34px); }
   .trust{ padding-block:clamp(48px,10vw,80px); }
   .foot{ padding-block:clamp(44px,9vw,70px) 26px; }
-  /* sahna ekranga sig'adi — avval 160vw edi va miya ikki chetdan qirqilardi */
-  .hero__stage{ top:42%; width:min(104vw,540px); opacity:.82; }
-  /* skrim matn boshlanadigan joydan qoraytiradi, miyaning ustiga tushmaydi */
-  .hero__scrim{ height:56%;
-    background:linear-gradient(180deg, transparent, rgba(8,8,10,.48) 40%,
-                rgba(8,8,10,.9) 72%, rgba(8,8,10,.96)); }
+  /* Telefonda hamma narsa ustma-ust tushadi, shuning uchun miya kattaroq va
+     to'liq yorqin qoladi; matn esa o'z soyasi bilan o'qiladi. Avval keng
+     skrim miyaning pastki yarmini yeb qo'yardi va desktopdan juda farq qilardi. */
+  .hero__stage{ top:38%; width:min(122vw,600px); opacity:1; }
+  .hero__scrim{ height:50%;
+    background:linear-gradient(180deg, transparent, rgba(8,8,10,.42) 34%,
+                rgba(8,8,10,.88) 66%, rgba(8,8,10,.97)); }
+  .hero__sub,
+  .hero__place{ text-shadow:0 1px 14px rgba(0,0,0,.9), 0 0 4px rgba(0,0,0,.7); }
+  .hero__title{ text-shadow:0 2px 24px rgba(0,0,0,.5); }
   .hero__in--split{ white-space:normal; flex-wrap:wrap; }
   .hero__rule{ display:none; }
   .stat{ flex:1 1 calc(50% - 8px); min-width:0; }
