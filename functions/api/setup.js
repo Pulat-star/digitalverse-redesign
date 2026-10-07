@@ -1,6 +1,11 @@
 import { json, fail, clamp } from '../../lib/util.js';
 import { hashPassword, createSession } from '../../lib/auth.js';
+import { rateLimit, tooMany } from '../../lib/ratelimit.js';
+
 export const onRequestPost = async ({ request, env }) => {
+  const rl = await rateLimit(env, request, 'setup', 5, 3600);
+  if (!rl.ok) return tooMany(rl.retryAfter);
+
   const row = await env.DB.prepare('SELECT COUNT(*) AS n FROM admin_users').first();
   if ((row?.n || 0) > 0) return fail('Admin allaqachon mavjud.');
   const { username, password } = await request.json().catch(() => ({}));

@@ -726,6 +726,13 @@ a.work:hover{ border-color:rgba(236,50,55,.45); transform:translateY(-4px); }
 }
 .work__desc{ margin:0; font-size:13.5px; line-height:1.45; color:var(--grey-2); }
 
+/* Honeypot: ekrandan olib tashlanadi, lekin DOM da qoladi.
+   display:none emas — ba'zi botlar bunday maydonlarni o'tkazib yuboradi. */
+.hp{
+  position:absolute; left:-9999px; top:auto;
+  width:1px; height:1px; overflow:hidden;
+}
+
 /* form error line */
 .form__err{
   margin:0; min-height:1em; font-size:13px; color:var(--red); text-align:center;
@@ -890,6 +897,31 @@ a.work:hover{ border-color:rgba(236,50,55,.45); transform:translateY(-4px); }
 .smm__n{ font-family:var(--mono); font-size:12px; letter-spacing:.16em; color:var(--red); }
 .smm__h{ font-family:var(--display); font-size:clamp(18px,1.9vw,24px); text-transform:uppercase; letter-spacing:-.02em; margin:0; }
 .smm__p{ margin:0; font-size:14.5px; color:var(--grey-2); }
+
+/* ------------------------------------------------ xizmatlar ro'yxati (SEO) */
+.svc{
+  margin-top:clamp(28px,3.4vw,46px);
+  border:1px solid var(--line); border-radius:var(--r);
+  background:linear-gradient(180deg,#131318,var(--ink) 70%);
+  padding:clamp(22px,2.8vw,36px);
+}
+.svc__h{
+  font-family:var(--display); font-weight:800; text-transform:uppercase;
+  font-size:clamp(16px,1.8vw,22px); letter-spacing:-.02em; margin:0 0 18px;
+}
+.svc__list{
+  display:grid; gap:10px 26px;
+  grid-template-columns:repeat(auto-fit,minmax(min(100%,260px),1fr));
+}
+.svc__list li{
+  display:flex; align-items:flex-start; gap:10px;
+  font-size:14.5px; color:rgba(255,255,255,.88); line-height:1.4;
+}
+.svc__list svg{ color:var(--green); flex:none; margin-top:3px; }
+.svc__note{
+  margin:20px 0 0; padding-top:18px; border-top:1px solid var(--line-2);
+  font-size:14px; line-height:1.55; color:var(--grey-2); max-width:72ch;
+}
 
 /* ============================================================ нам доверяют */
 .trust{ background:var(--smoke); color:var(--black); padding-block:clamp(60px,8vw,100px); position:relative; z-index:3; }

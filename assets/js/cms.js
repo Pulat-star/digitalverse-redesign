@@ -79,7 +79,8 @@
         name: (form.name && form.name.value || '').trim(),
         phone: (form.phone && form.phone.value || '').trim(),
         service: form.service ? form.service.value : '',
-        message: form.msg ? form.msg.value : ''
+        message: form.msg ? form.msg.value : '',
+        company: form.company ? form.company.value : ''   // honeypot
       };
       if (errBox) errBox.textContent = '';
       if (!data.name || !data.phone) {
