@@ -198,3 +198,14 @@ input:focus,select:focus,textarea:focus{ outline:none; border-color:var(--red); 
   .tabs button{ padding:8px 12px; font-size:12px; }
   .lead__when{ margin-left:0; width:100%; }
 }
+
+/* Ariza qaysi saytdan kelgani */
+.lead__site{
+  font-family:var(--mono); font-size:10.5px; letter-spacing:.08em; text-transform:uppercase;
+  padding:4px 9px; border-radius:999px; background:rgba(255,255,255,.07); color:var(--grey-2);
+  box-shadow:inset 0 0 0 1px rgba(255,255,255,.12);
+}
+.lead[data-source=greatevent] .lead__site{ background:rgba(240,80,84,.16); color:#ff9a9d; box-shadow:inset 0 0 0 1px rgba(240,80,84,.4); }
+.filters--sites{ margin-bottom:6px; }
+.filters--sites button{ font-weight:800; }
+.filters--sites .n--new{ background:var(--red); color:#fff; }

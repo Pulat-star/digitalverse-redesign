@@ -1,4 +1,9 @@
 import { json, fail, clamp } from '../../lib/util.js';
+
+/* Ariza qaysi saytdan kelgani. Ro'yxat qat'iy: mijoz yuborgan qiymat
+   shu ro'yxatda bo'lmasa, 'site' (DIGITALVERSE) deb yoziladi — bazaga
+   o'zboshimcha matn tushmaydi. */
+const SOURCES = ['site', 'greatevent'];
 import { rateLimit, tooMany } from '../../lib/ratelimit.js';
 
 export const onRequestPost = async ({ request, env }) => {
@@ -15,8 +20,9 @@ export const onRequestPost = async ({ request, env }) => {
   const phone = clamp(b.phone, 60);
   if (!name) return fail('Ismni kiriting.');
   if (!phone) return fail('Telefon raqamni kiriting.');
+  const source = SOURCES.includes(clamp(b.source, 40)) ? clamp(b.source, 40) : 'site';
   const res = await env.DB.prepare(
-    'INSERT INTO leads (name, phone, service, message) VALUES (?,?,?,?)'
-  ).bind(name, phone, clamp(b.service, 120), clamp(b.message, 2000)).run();
+    'INSERT INTO leads (name, phone, service, message, source) VALUES (?,?,?,?,?)'
+  ).bind(name, phone, clamp(b.service, 120), clamp(b.message, 2000), source).run();
   return json({ ok: true, id: res.meta.last_row_id });
 };

@@ -285,11 +285,33 @@
     { id: 'won', label: 'Muvaffaqiyatli' },
     { id: 'lost', label: 'Yo‘qotilgan' }
   ];
+  var SITES = [
+    { id: '', label: 'Barcha saytlar' },
+    { id: 'site', label: 'DIGITALVERSE' },
+    { id: 'greatevent', label: 'Great Event' }
+  ];
+  var SITE_LABEL = { site: 'DIGITALVERSE', greatevent: 'Great Event' };
   var filter = '';
+  var site = '';
 
   function loadLeads() {
-    api('/api/admin/leads' + (filter ? '?status=' + filter : '')).then(function (d) {
-      $('#nLeads').textContent = d.counts.new || 0;
+    var qs = [];
+    if (filter) qs.push('status=' + encodeURIComponent(filter));
+    if (site) qs.push('source=' + encodeURIComponent(site));
+    api('/api/admin/leads' + (qs.length ? '?' + qs.join('&') : '')).then(function (d) {
+      $('#nLeads').textContent = d.freshAll != null ? d.freshAll : (d.counts.new || 0);
+      $('#lCsv').href = '/api/admin/leads.csv' + (site ? '?source=' + encodeURIComponent(site) : '');
+
+      $('#lSites').innerHTML = SITES.map(function (s) {
+        var n = s.id ? ((d.sources && d.sources[s.id]) || 0) : (d.totalAll || 0);
+        var fresh = s.id ? ((d.fresh && d.fresh[s.id]) || 0) : (d.freshAll || 0);
+        return '<button data-site="' + s.id + '" class="' + (site === s.id ? 'is-on' : '') + '">' +
+               esc(s.label) + '<span class="n">' + n + '</span>' +
+               (fresh ? '<span class="n n--new">' + fresh + ' yangi</span>' : '') + '</button>';
+      }).join('');
+      $$('#lSites button').forEach(function (b) {
+        b.onclick = function () { site = b.dataset.site; loadLeads(); };
+      });
 
       $('#lFilters').innerHTML = STATUS.map(function (s) {
         var n = s.id ? (d.counts[s.id] || 0) : d.total;
@@ -301,8 +323,10 @@
       });
 
       $('#lList').innerHTML = d.leads.length ? d.leads.map(function (l) {
-        return '<article class="lead" data-status="' + esc(l.status) + '">' +
+        var src = l.source && SITE_LABEL[l.source] ? l.source : 'site';
+        return '<article class="lead" data-status="' + esc(l.status) + '" data-source="' + esc(src) + '">' +
           '<div class="lead__top">' +
+            '<span class="lead__site">' + esc(SITE_LABEL[src]) + '</span>' +
             '<span class="lead__name">' + esc(l.name) + '</span>' +
             '<a class="lead__phone" href="tel:' + esc(l.phone.replace(/[^\d+]/g, '')) + '">' + esc(l.phone) + '</a>' +
             (l.service ? '<span class="lead__svc">' + esc(l.service) + '</span>' : '') +

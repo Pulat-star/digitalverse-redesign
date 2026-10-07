@@ -9,7 +9,7 @@ const crypto = require('crypto');
 
 const ROOT = __dirname;
 const OUT = path.join(ROOT, 'dist');
-const INCLUDE = ['index.html', 'assets', 'admin', '_redirects'];
+const INCLUDE = ['index.html', 'assets', 'admin', 'greatevent', '_redirects'];
 
 fs.rmSync(OUT, { recursive: true, force: true });
 fs.mkdirSync(OUT, { recursive: true });
@@ -21,7 +21,7 @@ for (const entry of INCLUDE) {
 
 /* ---- CSP: inline skriptlar uchun sha256 hash ---------------------------- */
 const hashes = new Set();
-for (const page of ['index.html', path.join('admin', 'index.html')]) {
+for (const page of ['index.html', path.join('admin', 'index.html'), path.join('greatevent', 'index.html')]) {
   const file = path.join(OUT, page);
   if (!fs.existsSync(file)) continue;
   const html = fs.readFileSync(file, 'utf8');
@@ -41,8 +41,10 @@ const csp = [
   "img-src 'self' data:",
   "font-src 'self' https://fonts.gstatic.com",
   "style-src 'self' 'unsafe-inline' https://fonts.googleapis.com",
-  "script-src 'self' " + [...hashes].join(' '),
-  "connect-src 'self'",
+  // Cloudflare Web Analytics beacon'ini zonaning o'zi qo'shadi — shu bitta
+  // manzilsiz u CSP tomonidan bloklanadi va statistika yig'ilmaydi.
+  "script-src 'self' https://static.cloudflareinsights.com " + [...hashes].join(' '),
+  "connect-src 'self' https://cloudflareinsights.com",
   'upgrade-insecure-requests'
 ].join('; ');
 
@@ -66,4 +68,23 @@ const headers = `/*
 `;
 fs.writeFileSync(path.join(OUT, '_headers'), headers);
 
-console.log('dist/ built:', INCLUDE.join(', '), '+ _headers (CSP hash:', hashes.size + ')');
+/* ---- robots.txt + sitemap.xml ------------------------------------------ */
+const SITE = 'https://digitalverse.kz';
+const today = new Date().toISOString().slice(0, 10);
+fs.writeFileSync(path.join(OUT, 'robots.txt'), `User-agent: *
+Allow: /
+Disallow: /admin/
+Disallow: /api/
+
+Sitemap: ${SITE}/sitemap.xml
+`);
+const pages = [
+  { loc: `${SITE}/`, priority: '1.0', freq: 'weekly' },
+  { loc: `${SITE}/greatevent/`, priority: '0.8', freq: 'monthly' }
+];
+fs.writeFileSync(path.join(OUT, 'sitemap.xml'),
+  '<?xml version="1.0" encoding="UTF-8"?>\n<urlset xmlns="http://www.sitemaps.org/schemas/sitemap/0.9">\n' +
+  pages.map(p => `  <url><loc>${p.loc}</loc><lastmod>${today}</lastmod><changefreq>${p.freq}</changefreq><priority>${p.priority}</priority></url>`).join('\n') +
+  '\n</urlset>\n');
+
+console.log('dist/ built:', INCLUDE.join(', '), '+ _headers, robots.txt, sitemap.xml (CSP hash:', hashes.size + ')');
