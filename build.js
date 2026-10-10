@@ -9,7 +9,7 @@ const crypto = require('crypto');
 
 const ROOT = __dirname;
 const OUT = path.join(ROOT, 'dist');
-const INCLUDE = ['index.html', 'assets', 'admin', 'greatevent', '_redirects'];
+const INCLUDE = ['index.html', '404.html', 'assets', 'admin', 'greatevent', '_redirects'];
 
 fs.rmSync(OUT, { recursive: true, force: true });
 fs.mkdirSync(OUT, { recursive: true });
