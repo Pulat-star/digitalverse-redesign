@@ -65,6 +65,8 @@ const headers = `/*
 /api/*
   X-Robots-Tag: noindex, nofollow
   Cache-Control: no-store
+  Access-Control-Allow-Origin: https://digitalverse.kz
+  Vary: Origin
 `;
 fs.writeFileSync(path.join(OUT, '_headers'), headers);
 
